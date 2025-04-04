@@ -8,3 +8,10 @@ class UserCreateRequest(BaseModel):
 class UserCreateResponse(BaseModel):
     user_id: int
     created_at: datetime
+
+class UserFromDB(BaseModel):
+    user_id: int
+    email: EmailStr
+    password: str
+    created_at: datetime
+    updated_at: datetime

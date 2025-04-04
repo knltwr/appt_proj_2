@@ -5,11 +5,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app.database.db import Database
-from app.routers.users import router as users_router
+from app.routers import users, auth
+
 import json
 
 app = FastAPI()
-app.include_router(users_router) # add routers
+app.include_router(users.router)
+app.include_router(auth.router)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

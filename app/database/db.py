@@ -3,6 +3,7 @@ from psycopg import sql
 from psycopg.rows import dict_row
 import re
 import traceback
+from app.schemas.users import UserFromDB
 
 # TODO: use config to rename hard-coded strings like "postgres"
 class Database:
@@ -101,7 +102,7 @@ class Database:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                        INSERT INTO users(email, password) VALUES (%s, %s) RETURNING user_id, created_at;
+                        INSERT INTO users(email, password) VALUES (%s, %s) RETURNING user_id;
                     """,
                     (email, password,)
                 )
@@ -111,17 +112,17 @@ class Database:
             raise(e)
         
     def get_user_by_email(self,
-                          email: str) -> int:
+                          email: str): # add in annotation for user model as return type?
         try:
             with self.conn as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                        SELECT user_id, created_at FROM users WHERE email=%s;
+                        SELECT * FROM users WHERE email=%s;
                     """,
                     (email, )
                 )
-                return cursor.fetchone()
+                return UserFromDB(cursor.fetchone())
         except Exception as e:
             traceback.print_exc()
             raise(e)
