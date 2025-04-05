@@ -37,7 +37,7 @@ class Database:
                     raise(e2)
             else:
                 traceback.print_exc()
-                raise(e)
+                raise e
 
     def setup_database(self,
                        dbname: str):
@@ -73,7 +73,7 @@ class Database:
             if self.conn:
                 self.conn.close()
             traceback.print_exc()
-            raise(e)
+            raise e
         
     def drop_database(self,
                       dbname):
@@ -92,7 +92,7 @@ class Database:
             if conn:
                 conn.close()
             traceback.print_exc()
-            raise(e)
+            raise e
         
     def insert_user(self,
                     email: str, 
@@ -109,7 +109,7 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             traceback.print_exc()
-            raise(e)
+            raise e
         
     def get_user_by_email(self,
                           email: str): # add in annotation for user model as return type?
@@ -122,10 +122,26 @@ class Database:
                     """,
                     (email, )
                 )
-                return UserFromDB(cursor.fetchone())
+                return UserFromDB(**cursor.fetchone())
         except Exception as e:
             traceback.print_exc()
-            raise(e)
+            raise e
+
+    def get_user_by_user_id(self,
+                          user_id: int): # add in annotation for user model as return type?
+        try:
+            with self.conn as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                        SELECT * FROM users WHERE user_id=%s;
+                    """,
+                    (user_id, )
+                )
+                return UserFromDB(**cursor.fetchone())
+        except Exception as e:
+            traceback.print_exc()
+            raise e
         
         
 
