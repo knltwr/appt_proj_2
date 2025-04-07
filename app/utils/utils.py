@@ -21,3 +21,13 @@ def is_correct_password(entered_password: str , correct_password: str) -> bool:
 
 def generate_response(success: bool, data: Any):
     return json.dumps({"success": success, "data": data})
+
+def singleton(cls):
+    instances = {}
+
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls()
+        return instances[cls]
+
+    return getinstance

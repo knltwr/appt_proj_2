@@ -3,7 +3,6 @@ from psycopg import sql
 from psycopg.rows import dict_row
 import re
 import traceback
-from app.schemas.users import UserFromDB
 
 # TODO: use config to rename hard-coded strings like "postgres"
 class Database:
@@ -52,7 +51,6 @@ class Database:
                     """).format(sql_dbname = sql.Identifier(dbname))
                 )
             # exiting context manager commits the change or rollbacks all changes if exception is raised
-            # TODO: ADD IN TABLE CREATES
             conn.close()
             del conn
             conn = psycopg.connect(dbname = dbname, user = "postgres", password = "password", host = "localhost", port = 5432, row_factory = dict_row)
@@ -96,13 +94,13 @@ class Database:
         
     def insert_user(self,
                     email: str, 
-                    password: str) -> int:
+                    password: str) -> dict:
         try:
             with self.conn as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                        INSERT INTO users(email, password) VALUES (%s, %s) RETURNING user_id;
+                        INSERT INTO users(email, password) VALUES (%s, %s) RETURNING *;
                     """,
                     (email, password,)
                 )
@@ -112,7 +110,7 @@ class Database:
             raise e
         
     def get_user_by_email(self,
-                          email: str): # add in annotation for user model as return type?
+                          email: str) -> dict: # add in annotation for user model as return type? causes issue though if None returned from query
         try:
             with self.conn as conn:
                 cursor = conn.cursor()
@@ -122,13 +120,13 @@ class Database:
                     """,
                     (email, )
                 )
-                return UserFromDB(**cursor.fetchone())
+                return cursor.fetchone()
         except Exception as e:
             traceback.print_exc()
             raise e
 
     def get_user_by_user_id(self,
-                          user_id: int): # add in annotation for user model as return type?
+                          user_id: int) -> dict: # add in annotation for user model as return type? causes issue though if None returned from query
         try:
             with self.conn as conn:
                 cursor = conn.cursor()
@@ -138,7 +136,7 @@ class Database:
                     """,
                     (user_id, )
                 )
-                return UserFromDB(**cursor.fetchone())
+                return cursor.fetchone()
         except Exception as e:
             traceback.print_exc()
             raise e

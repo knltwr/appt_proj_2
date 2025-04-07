@@ -3,8 +3,6 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from datetime import timedelta, datetime, timezone
 from app.schemas import oauth2 as schemas_oauth2
-from app.schemas import users as schemas_users
-import traceback
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
