@@ -1,16 +1,16 @@
 from fastapi import APIRouter, status, Depends, HTTPException
-from app.schemas import users
 from app.utils.utils import get_hashed_salted_password
 from app.database.db import Database
 import psycopg
 from app.utils.oauth2 import get_current_user
+from app.schemas import users as schemas_users
 from app.schemas import oauth2 as schemas_oauth2
 
 router = APIRouter(prefix="/users", tags=['Users'])
 
 
-@router.post("", status_code = status.HTTP_201_CREATED, response_model = users.UserCreateResponse)
-def user_create(user: users.UserCreateRequest, db: Database = Depends(Database)):
+@router.post("", status_code = status.HTTP_201_CREATED, response_model = schemas_users.UserCreateResponse)
+def user_create(user: schemas_users.UserCreateRequest, db: Database = Depends(Database)):
       
     user.password = get_hashed_salted_password(user.password)
 
@@ -24,9 +24,9 @@ def user_create(user: users.UserCreateRequest, db: Database = Depends(Database))
     if user_from_db is None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "User not found")
     
-    return users.UserCreateResponse(**user_from_db) # if Pydantic model is not followed, this throws error
+    return schemas_users.UserCreateResponse(**user_from_db) # if Pydantic model is not followed, this throws error
     
-@router.get("", status_code = status.HTTP_200_OK, response_model = users.UserGetResponse)
+@router.get("", status_code = status.HTTP_200_OK, response_model = schemas_users.UserGetResponse)
 def user_get(db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
 
     user_id = int(payload.user_id)
@@ -42,4 +42,4 @@ def user_get(db: Database = Depends(Database), payload: schemas_oauth2.TokenPayl
     if user_from_db is None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "User not found")
     
-    return users.UserGetResponse(**user_from_db) # if Pydantic model is not followed, this throws error
+    return schemas_users.UserGetResponse(**user_from_db) # if Pydantic model is not followed, this throws error

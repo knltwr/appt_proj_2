@@ -2,13 +2,14 @@ from fastapi import FastAPI, Depends, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
 from typing import Optional
-from app.routers import login, users
+from app.routers import login, users, services
 
 import json
 
 app = FastAPI()
 app.include_router(users.router)
 app.include_router(login.router)
+app.include_router(services.router)
 
 # RequestValidationError is for when Pydantic throws an error
 @app.exception_handler(RequestValidationError)
