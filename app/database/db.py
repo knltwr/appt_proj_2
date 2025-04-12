@@ -49,11 +49,11 @@ class Database:
                        dbname: str = CONFIG.DATABASE_NAME):
         conn = None
         try:
-            conn = psycopg.connect(dbname = CONFIG.DATABASE_DEFAULT_DB_NAME, 
-                                   user = CONFIG.DATABASE_DEFAULT_DB_USERNAME, 
-                                   password = CONFIG.DATABASE_DEFAULT_DB_PASSWORD, 
-                                   host = CONFIG.DATABASE_DEFAULT_DB_HOSTNAME, 
-                                   port = CONFIG.DATABASE_DEFAULT_DB_PORT, 
+            conn = psycopg.connect(dbname = CONFIG.DATABASE_MAINT_DB_NAME, 
+                                   user = CONFIG.DATABASE_MAINT_DB_USERNAME, 
+                                   password = CONFIG.DATABASE_MAINT_DB_PASSWORD, 
+                                   host = CONFIG.DATABASE_MAINT_DB_HOSTNAME, 
+                                   port = CONFIG.DATABASE_MAINT_DB_PORT, 
                                    row_factory = dict_row
                                    ) # postgres is default DB always there
             conn.autocommit = True # this is necessary for DDL
@@ -67,21 +67,61 @@ class Database:
             conn.close()
             del conn
             conn = psycopg.connect(dbname = dbname, 
-                                   user = CONFIG.DATABASE_DEFAULT_DB_USERNAME, 
-                                   password = CONFIG.DATABASE_DEFAULT_DB_PASSWORD, 
-                                   host = CONFIG.DATABASE_DEFAULT_DB_HOSTNAME, 
-                                   port = CONFIG.DATABASE_DEFAULT_DB_PORT, 
+                                   user = CONFIG.DATABASE_MAINT_DB_USERNAME, 
+                                   password = CONFIG.DATABASE_MAINT_DB_PASSWORD, 
+                                   host = CONFIG.DATABASE_MAINT_DB_HOSTNAME, 
+                                   port = CONFIG.DATABASE_MAINT_DB_PORT, 
                                    row_factory = dict_row
                                    )
             with conn:
-                conn.cursor().execute(sql.SQL(
+                cur = conn.cursor()
+                
+                cur.execute(sql.SQL(
                     """
                         CREATE TABLE users (
-                        user_id SERIAL PRIMARY KEY,
-                        email TEXT UNIQUE NOT NULL,
-                        password TEXT NOT NULL,
-                        created_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
-                        updated_at TIMESTAMP NOT NULL DEFAULT current_timestamp
+                            user_id SERIAL PRIMARY KEY,
+                            email TEXT UNIQUE NOT NULL,
+                            password TEXT NOT NULL,
+                            created_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
+                            updated_at TIMESTAMP NOT NULL DEFAULT current_timestamp
+                        );
+                    """) # TIMESTAMP type should ignore timezone
+                )
+                cur.execute(sql.SQL(
+                    """
+                        CREATE TABLE IF NOT EXISTS services (
+                            service_id SERIAL PRIMARY KEY,
+                            service_name TEXT NOT NULL,
+                            street_address TEXT NOT NULL,
+                            city TEXT NOT NULL,
+                            state TEXT NOT NULL,
+                            zip_code TEXT NOT NULL,
+                            phone_number TEXT UNIQUE NOT NULL,
+                            is_open_mo INTEGER NOT NULL DEFAULT 0,
+                            open_time_mo TEXT NOT NULL,
+                            close_time_mo TEXT NOT NULL,
+                            is_open_tu INTEGER NOT NULL DEFAULT 0,
+                            open_time_tu TEXT NOT NULL,
+                            close_time_tu TEXT NOT NULL,
+                            is_open_we INTEGER NOT NULL DEFAULT 0,
+                            open_time_we TEXT NOT NULL,
+                            close_time_we TEXT NOT NULL,
+                            is_open_th INTEGER NOT NULL DEFAULT 0,
+                            open_time_th TEXT NOT NULL,
+                            close_time_th TEXT NOT NULL,
+                            is_open_fr INTEGER NOT NULL DEFAULT 0,
+                            open_time_fr TEXT NOT NULL,
+                            close_time_fr TEXT NOT NULL,
+                            is_open_sa INTEGER NOT NULL DEFAULT 0,
+                            open_time_sa TEXT NOT NULL,
+                            close_time_sa TEXT NOT NULL,
+                            is_open_su INTEGER NOT NULL DEFAULT 0,
+                            open_time_su TEXT NOT NULL,
+                            close_time_su TEXT NOT NULL,
+                            host_id INTEGER NOT NULL,
+                            created_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
+                            updated_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
+                            FOREIGN KEY (host_id) REFERENCES users (user_id)
                         );
                     """) # TIMESTAMP type should ignore timezone
                 )
@@ -94,14 +134,14 @@ class Database:
         
     def drop_database(self,
                       dbname: str = CONFIG.DATABASE_NAME):
-        if dbname == CONFIG.DATABASE_DEFAULT_DB_NAME:
-            raise Exception(f"Tried to drop {CONFIG.DATABASE_DEFAULT_DB_NAME}")
+        if dbname == CONFIG.DATABASE_MAINT_DB_NAME:
+            raise Exception(f"Tried to drop {CONFIG.DATABASE_MAINT_DB_NAME}")
         try:
-            conn = psycopg.connect(dbname = CONFIG.DATABASE_DEFAULT_DB_NAME, 
-                                   user = CONFIG.DATABASE_DEFAULT_DB_USERNAME, 
-                                   password = CONFIG.DATABASE_DEFAULT_DB_PASSWORD, 
-                                   host = CONFIG.DATABASE_DEFAULT_DB_HOSTNAME, 
-                                   port = CONFIG.DATABASE_DEFAULT_DB_PORT, 
+            conn = psycopg.connect(dbname = CONFIG.DATABASE_MAINT_DB_NAME, 
+                                   user = CONFIG.DATABASE_MAINT_DB_USERNAME, 
+                                   password = CONFIG.DATABASE_MAINT_DB_PASSWORD, 
+                                   host = CONFIG.DATABASE_MAINT_DB_HOSTNAME, 
+                                   port = CONFIG.DATABASE_MAINT_DB_PORT, 
                                    row_factory = dict_row
                                    )
             with conn:
@@ -165,35 +205,62 @@ class Database:
         except Exception as e:
             traceback.print_exc()
             raise e
-        
-        
-
-
-### Use singleton?
-# def singleton(cls):
-#     instances = {}
-
-#     def getinstance():
-#         if cls not in instances:
-#             instances[cls] = cls()
-#         return instances[cls]
-
-#     return getinstance
-
-# Only <=1 instance of the database driver
-# exists within the app at all times
-# DatabaseDriver = singleton(DatabaseDriver)
-
-
-### SHOULD USE DATABASE CONNECTION POOL?
-
-
-# # Open a cursor to perform database operations
-# cur = conn.cursor()
-
-# # Execute a query
-# cur.execute("SELECT * FROM my_data")
-
-# # Retrieve query results
-# records = cur.fetchall()
-
+    
+    def insert_service(self, 
+                       service_name: str, 
+                       street_address: str, city: str, state: str, zip_code: str, 
+                       phone_number: str, 
+                       is_open_mo: int, open_time_mo: str, close_time_mo: str, 
+                       is_open_tu: int, open_time_tu: str, close_time_tu: str,
+                       is_open_we: int, open_time_we: str, close_time_we: str,
+                       is_open_th: int, open_time_th: str, close_time_th: str,
+                       is_open_fr: int, open_time_fr: str, close_time_fr: str,
+                       is_open_sa: int, open_time_sa: str, close_time_sa: str,
+                       is_open_su: int, open_time_su: str, close_time_su: str,
+                       host_id: int):
+        try:
+            with self.conn as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                        INSERT INTO services (
+                            service_name, 
+                            street_address, city, state, zip_code, 
+                            phone_number, 
+                            is_open_mo, open_time_mo, close_time_mo, 
+                            is_open_tu, open_time_tu, close_time_tu, 
+                            is_open_we, open_time_we, close_time_we,
+                            is_open_th, open_time_th, close_time_th,
+                            is_open_fr, open_time_fr, close_time_fr,
+                            is_open_sa, open_time_sa, close_time_sa,
+                            is_open_su, open_time_su, close_time_su,
+                            host_id) 
+                        VALUES (
+                            %s, 
+                            %s, %s, %s, %s,
+                            %s,
+                            %s, %s, %s,
+                            %s, %s, %s,
+                            %s, %s, %s,
+                            %s, %s, %s,
+                            %s, %s, %s,
+                            %s, %s, %s,
+                            %s, %s, %s,
+                            %s)
+                        RETURNING *;
+                """, (service_name, 
+                      street_address, city, state, zip_code, 
+                      phone_number,
+                      is_open_mo, open_time_mo, close_time_mo,
+                      is_open_tu, open_time_tu, close_time_tu,
+                      is_open_we, open_time_we, close_time_we,
+                      is_open_th, open_time_th, close_time_th,
+                      is_open_fr, open_time_fr, close_time_fr,
+                      is_open_sa, open_time_sa, close_time_sa,
+                      is_open_su, open_time_su, close_time_su,
+                      host_id,)
+                )
+                return cursor.fetchone()
+        except Exception as e:
+            traceback.print_exc()
+            raise e

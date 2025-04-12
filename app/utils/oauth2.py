@@ -5,11 +5,12 @@ from datetime import timedelta, datetime, timezone
 from app.schemas import oauth2 as schemas_oauth2
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from app.config import CONFIG
 
 # TODO: change secret key when moving to env vars
-SECRET_KEY = "41d92644bbabd3f50f973d301f881d0e0f8ad3d99d44f6ecb097d5f84d91f45d" # openssl rand -hex 32
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = CONFIG.OAUTH2_SECRET_KEY # openssl rand -hex 32
+ALGORITHM = CONFIG.OAUTH2_ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = CONFIG.OAUTH2_ACCESS_TOKEN_LIFE_MINUTES
 OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl="login") # this parameter route where the user logins to receive a token
 
 def create_access_token(data: dict) -> schemas_oauth2.Token:

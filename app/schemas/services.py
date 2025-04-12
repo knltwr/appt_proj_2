@@ -1,12 +1,14 @@
 from pydantic import BaseModel, field_validator
 from app.config import CONFIG
+from datetime import datetime
 
 class ServiceCreateRequest(BaseModel):
-    name: str
+    service_name: str
     street_address: str
     city: str
     state: str
     zip_code: str
+    phone_number: str
     is_open_mo: int = 0
     is_open_tu: int = 0
     is_open_we: int = 0
@@ -33,3 +35,9 @@ class ServiceCreateRequest(BaseModel):
     def validate_is_open(cls, is_open):
         if is_open not in (0, 1):
             raise ValueError("is_open_* must be 0 or 1")
+        return is_open
+        
+class ServiceCreateResponse(ServiceCreateRequest):
+    host_id: int
+    created_at: datetime
+    updated_at: datetime
