@@ -145,14 +145,14 @@ class Database:
                             appt_id SERIAL PRIMARY KEY,
                             user_id INTEGER NOT NULL,
                             service_id INTEGER NOT NULL,
-                            appt_type_id INTEGER NOT NULL,
+                            appt_type_name TEXT NOT NULL,
                             appt_starts_at TEXT NOT NULL,
                             appt_ends_at TEXT NOT NULL,
                             created_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
                             updated_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
                             FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
                             FOREIGN KEY (service_id) REFERENCES services(service_id) ON DELETE CASCADE,
-                            FOREIGN KEY (appt_type_id) REFERENCES appt_types(appt_type_id) ON DELETE CASCADE
+                            FOREIGN KEY (service_id, appt_type_name) REFERENCES appt_types(service_id, appt_type_name) ON DELETE CASCADE
                         );
                     """)
                 )
@@ -360,6 +360,23 @@ class Database:
                         INSERT INTO appt_types (service_id, appt_type_name, appt_duration_minutes) VALUES (%s, %s, %s) RETURNING *;
                     """, 
                     (service_id, appt_type_name, appt_duration_minutes)
+                )
+                return cursor.fetchone()
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+    
+    def get_appt_type_by_service_id_and_appt_type_name(self, 
+                                                       service_id: int,
+                                                       appt_type_name: str):
+        try:
+            with self.conn as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                        SELECT * FROM appt_types WHERE service_id=%s AND appt_type_name=%s;
+                    """,
+                    (service_id, appt_type_name, )
                 )
                 return cursor.fetchone()
         except Exception as e:

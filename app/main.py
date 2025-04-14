@@ -10,6 +10,7 @@ app = FastAPI()
 app.include_router(users.router)
 app.include_router(login.router)
 app.include_router(services.router)
+app.include_router(appts.router)
 
 # RequestValidationError is for when Pydantic throws an error
 @app.exception_handler(RequestValidationError)

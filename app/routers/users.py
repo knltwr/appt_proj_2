@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Depends, HTTPException
-from app.utils.utils import get_hashed_salted_password
+from app.utils.util_funcs import get_hashed_salted_password
 from app.database.db import Database
 import psycopg
 from app.utils.oauth2 import get_current_user

@@ -1,11 +1,12 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from app.utils.utils import singleton
+from app.utils.util_funcs import singleton
 
 @singleton
 class Config(BaseSettings):
 
-    USER_MIN_PASSWORD_LENGTH: int
-    USER_MAX_PASSWORD_LENGTH: int
+    PASSWORD_MIN_LENGTH: int
+    PASSWORD_MAX_LENGTH: int
+    PASSWORD_SALT_ROUNDS: int
 
     OAUTH2_SECRET_KEY: str
     OAUTH2_ALGORITHM: str
@@ -25,6 +26,7 @@ class Config(BaseSettings):
 
     DT_DATETIME_FORMAT: str
     DT_TIME_FORMAT: str
+    
     SERVICE_DEFAULT_OPEN_TIME: str
     SERVICE_DEFAULT_CLOSE_TIME: str
     SERVICE_MIN_TIME: str

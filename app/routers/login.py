@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from app.schemas import oauth2 as schemas_oauth2
 from app.schemas import users as schemas_users
-from app.utils.utils import is_correct_password
+from app.utils.util_funcs import is_correct_password
 from app.database.db import Database
 import psycopg
 import app.utils.oauth2 as oauth2
