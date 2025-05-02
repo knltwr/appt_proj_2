@@ -23,18 +23,8 @@ def is_correct_password(entered_password: str , correct_password: str) -> bool:
 def generate_response(success: bool, data: Any):
     return json.dumps({"success": success, "data": data})
 
-def singleton(cls):
-    instances = {}
+def get_formatted_datetime(inp) -> datetime:
+    return datetime.datetime.strptime(str(inp), CONFIG.DT_DATETIME_FORMAT)
 
-    def getinstance():
-        if cls not in instances:
-            instances[cls] = cls()
-        return instances[cls]
-
-    return getinstance
-
-def get_formatted_datetime(inp: datetime) -> datetime:
-    return datetime.strptime(inp, CONFIG.DT_DATETIME_FORMAT)
-
-def get_formatted_time(inp: datetime) -> datetime:
-    datetime.datetime.strptime(inp, CONFIG.DT_TIME_FORMAT).time()
+def get_formatted_time(inp) -> datetime:
+    return datetime.datetime.strptime(str(inp), CONFIG.DT_TIME_FORMAT).time()

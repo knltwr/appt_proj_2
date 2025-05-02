@@ -4,7 +4,9 @@ from psycopg.rows import dict_row
 import re
 import traceback
 from app.config import CONFIG
+from app.utils.other_funcs import singleton
 
+# @singleton
 class Database:
 
     conn = None
@@ -370,13 +372,94 @@ class Database:
                                                        service_id: int,
                                                        appt_type_name: str):
         try:
-            with self.conn as conn:
+            # for some reason, could not use self.conn here b/c it would be closed when creating cursor, so created a new connection for just this function
+            with psycopg.connect(dbname = self.dbname, 
+                                   user = CONFIG.DATABASE_USERNAME, 
+                                   password = CONFIG.DATABASE_PASSWORD, 
+                                   host = CONFIG.DATABASE_HOSTNAME, 
+                                   port = CONFIG.DATABASE_PORT, 
+                                   row_factory = dict_row
+                                   ) as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
                         SELECT * FROM appt_types WHERE service_id=%s AND appt_type_name=%s;
                     """,
                     (service_id, appt_type_name, )
+                )
+                return cursor.fetchone()
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+        
+    def get_conflicting_appt(self, 
+                              service_id: int,
+                              appt_type_name: str,
+                              appt_starts_at: str, 
+                              appt_ends_at: str):
+        """
+        Checks if there exists any appointment that conflicts with the time slot provided in the arguments. Returns None if no conflict.
+
+        :param int service_id: service_id
+        :param str appt_starts_at: timestamp of when the appointment should start
+        :param str appt_ends_at: timestamp of when the appointment should end
+        :return: data of the existing conflicting appointment
+        :rtype: dict | None
+        """
+        try:
+            # for some reason, could not use self.conn here b/c it would be closed when creating cursor, so created a new connection for just this function
+            with psycopg.connect(dbname = self.dbname, 
+                                   user = CONFIG.DATABASE_USERNAME, 
+                                   password = CONFIG.DATABASE_PASSWORD, 
+                                   host = CONFIG.DATABASE_HOSTNAME, 
+                                   port = CONFIG.DATABASE_PORT, 
+                                   row_factory = dict_row
+                                   ) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                        SELECT appt_id 
+                        FROM appts
+                        WHERE service_id = %s -- service_id
+                        AND appt_type_name = %s
+                        AND (
+                            (%s >= appt_starts_at AND %s < appt_ends_at) -- appt_starts_at, appt_starts_at
+                            OR 
+                            (%s > appt_starts_at AND %s <= appt_ends_at) -- appt_ends_at, appt_ends_at
+                        ) 
+                    """,
+                    (service_id,
+                    appt_type_name,
+                    appt_starts_at, appt_starts_at, 
+                    appt_ends_at, appt_ends_at,)
+                )
+                return cursor.fetchone()
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+    
+    def insert_appt(self,
+                    user_id: int,
+                    service_id: int,
+                    appt_type_name: str,
+                    appt_starts_at: str,
+                    appt_ends_at: str
+                    ):
+        try:
+            # for some reason, could not use self.conn here b/c it would be closed when creating cursor, so created a new connection for just this function
+            with psycopg.connect(dbname = self.dbname, 
+                                   user = CONFIG.DATABASE_USERNAME, 
+                                   password = CONFIG.DATABASE_PASSWORD, 
+                                   host = CONFIG.DATABASE_HOSTNAME, 
+                                   port = CONFIG.DATABASE_PORT, 
+                                   row_factory = dict_row
+                                   ) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                        INSERT INTO appts (user_id, service_id, appt_type_name, appt_starts_at, appt_ends_at) VALUES (%s, %s, %s, %s, %s) RETURNING *;
+                    """, 
+                    (user_id, service_id, appt_type_name, appt_starts_at, appt_ends_at,)
                 )
                 return cursor.fetchone()
         except Exception as e:

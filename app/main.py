@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
 from typing import Optional
-from app.routers import login, users, services
+from app.routers import login, users, services, appts
 
 import json
 

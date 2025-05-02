@@ -4,8 +4,9 @@ from app.database.db import Database
 import psycopg
 from app.utils.oauth2 import get_current_user
 from app.schemas import appts as schemas_appts
-from datetime import datetime
-from config import CONFIG
+import datetime
+from app.config import CONFIG
+from app.utils.util_funcs import get_formatted_time, get_formatted_datetime
 
 router = APIRouter(prefix="/appts", tags=['Appointments'])
 
@@ -17,8 +18,10 @@ def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Da
     if user_id is None:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Something went wrong")  # this shouldn't happen though
     
+    appt_dict = appt.model_dump()
+
     try:
-        service_from_db = db.get_service_by_service_id(appt.service_id)
+        service_from_db = db.get_service_by_service_id(appt_dict["service_id"])
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
     
@@ -26,7 +29,7 @@ def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Da
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "Service not found")
     
     try:
-        appt_type_from_db = db.get_appt_type_by_service_id_and_appt_type_name(service_from_db["service_id"], service_from_db["appt_type_name"])
+        appt_type_from_db = db.get_appt_type_by_service_id_and_appt_type_name(appt_dict["service_id"], appt_dict["appt_type_name"])
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
     
@@ -34,7 +37,7 @@ def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Da
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "Appt type not found")
     
     appt_duration_minutes = appt_type_from_db["appt_duration_minutes"]
-    appt_starts_at = appt.appt_starts_at
+    appt_starts_at = appt_dict["appt_starts_at"]
     appt_ends_at = appt_starts_at + datetime.timedelta(minutes = int(appt_duration_minutes))
 
     is_open_weekday_mapping = {1: "is_open_mo", 2: "is_open_tu", 3: "is_open_we", 4: "is_open_th", 5: "is_open_fr", 6: "is_open_sa", 7: "is_open_su"}
@@ -45,9 +48,11 @@ def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Da
     date_in_check = appt_starts_at.date()
     weekday_in_check = date_in_check.isoweekday()
     if (
-        not ( service_from_db.get(is_open_weekday_mapping[weekday_in_check]) ) 
-        or ( appt_starts_at.time() < datetime.datetime.strptime(service_from_db.get(open_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time() ) 
-        or ( appt_starts_at.time() > datetime.datetime.strptime(service_from_db.get(close_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time() )
+        not ( service_from_db[is_open_weekday_mapping[weekday_in_check]] ) # on a day that service is not open
+        # or ( appt_starts_at.time() < datetime.datetime.strptime(service_from_db.get(open_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time() )  # starts before service open
+        or ( appt_starts_at.time() < get_formatted_time(service_from_db[open_time_weekday_mapping[weekday_in_check]]) )  # starts before service open
+        # or ( appt_starts_at.time() > datetime.datetime.strptime(service_from_db.get(close_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time() ) # starts after service closes
+        or ( appt_starts_at.time() > get_formatted_time(service_from_db[close_time_weekday_mapping[weekday_in_check]]) ) # starts after service closes
     ):
         raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Could not create appointment due to invalid appointment time")
     
@@ -57,9 +62,11 @@ def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Da
         while date_in_check < appt_ends_at.date():
             weekday_in_check = date_in_check.isoweekday()
             if (
-                not (service_from_db.get(is_open_weekday_mapping[weekday_in_check])) 
-                or (str(datetime.datetime.strptime(service_from_db.get(open_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time()) != CONFIG.SERVICE_MIN_TIME) # 00:00:00
-                or (str(datetime.datetime.strptime(service_from_db.get(close_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time()) != CONFIG.SERVICE_MAX_TIME) # 23:59:59
+                not (service_from_db.get(is_open_weekday_mapping[weekday_in_check])) # on a day that service is not open
+                # or (str(datetime.datetime.strptime(service_from_db.get(open_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time()) != CONFIG.SERVICE_MIN_TIME) # 00:00:00 # since appt does not end this day, service must be open whole day
+                or (str(get_formatted_time(service_from_db[open_time_weekday_mapping[weekday_in_check]])) != CONFIG.SERVICE_MIN_TIME) # 00:00:00 # since appt does not end this day, service must be open whole day
+                # or (str(datetime.datetime.strptime(service_from_db.get(close_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time()) != CONFIG.SERVICE_MAX_TIME) # 23:59:59 # since appt does not end this day, service must be open whole day
+                or (str(get_formatted_time(service_from_db[close_time_weekday_mapping[weekday_in_check]])) != CONFIG.SERVICE_MAX_TIME) # 23:59:59 # since appt does not end this day, service must be open whole day
             ):
                 raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Could not create appointment due to invalid appointment time")
             date_in_check += datetime.timedelta(days = 1)
@@ -67,18 +74,19 @@ def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Da
     # last day
     weekday_in_check = date_in_check.isoweekday()
     if (
-        not ( service_from_db.get(is_open_weekday_mapping[weekday_in_check]) ) 
-        or ( appt_ends_at.time() < datetime.datetime.strptime(service_from_db.get(open_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time() ) 
-        or ( appt_ends_at.time() > datetime.datetime.strptime(service_from_db.get(close_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time() )
+        not ( service_from_db.get(is_open_weekday_mapping[weekday_in_check]) ) # on a day that service is not open
+        # or ( appt_ends_at.time() < datetime.datetime.strptime(service_from_db.get(open_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time() ) # ends before service opens
+        or ( appt_ends_at.time() < get_formatted_time(service_from_db[open_time_weekday_mapping[weekday_in_check]]) ) # ends before service opens
+        # or ( appt_ends_at.time() > datetime.datetime.strptime(service_from_db.get(close_time_weekday_mapping[weekday_in_check]), CONFIG.DT_TIME_FORMAT).time() ) # ends after service closes
+        or ( appt_ends_at.time() > get_formatted_time(service_from_db[close_time_weekday_mapping[weekday_in_check]]) ) # ends after service closes
     ):
         raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Could not create appointment due to invalid appointment time")
 
     # NEED TO CHECK IN DB FOR CONFLICT WITH ANY EXISTING APPOINTMENT
-    # appt_check = DB.appt_check_valid_appt(body.get("service_id"), str(appt_starts_at), str(appt_ends_at))
-    #     if appt_check is not None:
-    #         traceback.print_exc()
-    #         return failure_response(error = "Could not create appointment due to conflict at the specified time", http_status=404)
+    appt_conflict_check = db.get_conflicting_appt(appt_dict["service_id"], appt_dict["appt_type_name"], str(appt_starts_at), str(appt_ends_at))
+    if appt_conflict_check is not None:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Could not create appointment due to service having conflict at the time")
         
-    # DB.appt_insert(user_id, body.get("service_id"), appt_starts_at, appt_ends_at)
+    created_appt = db.insert_appt(user_id, appt_dict["service_id"], appt_dict["appt_type_name"], appt_starts_at, appt_ends_at)
     
-    return schemas_appts.ApptCreateResponse(**service_from_db) # if Pydantic model is not followed, this throws error
+    return schemas_appts.ApptCreateResponse(**created_appt) # if Pydantic model is not followed, this throws error

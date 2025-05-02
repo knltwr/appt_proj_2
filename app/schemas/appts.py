@@ -13,4 +13,11 @@ class ApptCreateRequest(BaseModel):
         return get_formatted_datetime(appt_starts_at)
 
 class ApptCreateResponse(BaseModel):
-    pass
+    appt_id: int
+    user_id: int
+    service_id: int
+    appt_type_name: str
+    appt_starts_at: datetime
+    appt_ends_at: datetime
+    created_at: datetime
+    updated_at: datetime
