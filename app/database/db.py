@@ -5,6 +5,7 @@ import re
 import traceback
 from app.config import CONFIG
 from app.utils.other_funcs import singleton
+from pathlib import Path
 
 # @singleton
 class Database:
@@ -33,7 +34,7 @@ class Database:
         except psycopg.OperationalError as e:            
             if re.search(r"database.*does not exist", e.args[0]) and create_if_not_exists_db is True: # regex ".*" matches any characters
                 try:
-                    self.conn = self.setup_database(dbname = dbname)
+                    self.conn = self.init_database(dbname = dbname)
                     self.dbname = dbname
                 except Exception as e2:
                     if self.conn:
@@ -44,7 +45,7 @@ class Database:
                 traceback.print_exc()
                 raise e
 
-    def setup_database(self,
+    def init_database(self,
                        dbname: str = CONFIG.DATABASE_NAME
                        ) -> psycopg.Connection:
         conn = None
@@ -66,6 +67,7 @@ class Database:
             # exiting context manager commits the change or rollbacks all changes if exception is raised
             conn.close()
             del conn
+            
             conn = psycopg.connect(dbname = dbname, 
                                    user = CONFIG.DATABASE_USERNAME, 
                                    password = CONFIG.DATABASE_PASSWORD, 
@@ -76,88 +78,25 @@ class Database:
             with conn:
                 cur = conn.cursor()
                 
-                cur.execute(sql.SQL(
-                    """
-                        CREATE TABLE users (
-                            user_id SERIAL PRIMARY KEY,
-                            email TEXT NOT NULL,
-                            password TEXT NOT NULL,
-                            created_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-                            updated_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-                            UNIQUE (email)
-                        );
-                    """) # TIMESTAMP type should ignore timezone
-                )
-                cur.execute(sql.SQL(
-                    """
-                        CREATE TABLE IF NOT EXISTS services (
-                            service_id SERIAL PRIMARY KEY,
-                            host_id INTEGER NOT NULL,
-                            service_name TEXT NOT NULL,
-                            street_address TEXT NOT NULL,
-                            city TEXT NOT NULL,
-                            state TEXT NOT NULL,
-                            zip_code TEXT NOT NULL,
-                            phone_number TEXT UNIQUE NOT NULL,
-                            is_open_mo INTEGER NOT NULL DEFAULT 0,
-                            open_time_mo TEXT NOT NULL,
-                            close_time_mo TEXT NOT NULL,
-                            is_open_tu INTEGER NOT NULL DEFAULT 0,
-                            open_time_tu TEXT NOT NULL,
-                            close_time_tu TEXT NOT NULL,
-                            is_open_we INTEGER NOT NULL DEFAULT 0,
-                            open_time_we TEXT NOT NULL,
-                            close_time_we TEXT NOT NULL,
-                            is_open_th INTEGER NOT NULL DEFAULT 0,
-                            open_time_th TEXT NOT NULL,
-                            close_time_th TEXT NOT NULL,
-                            is_open_fr INTEGER NOT NULL DEFAULT 0,
-                            open_time_fr TEXT NOT NULL,
-                            close_time_fr TEXT NOT NULL,
-                            is_open_sa INTEGER NOT NULL DEFAULT 0,
-                            open_time_sa TEXT NOT NULL,
-                            close_time_sa TEXT NOT NULL,
-                            is_open_su INTEGER NOT NULL DEFAULT 0,
-                            open_time_su TEXT NOT NULL,
-                            close_time_su TEXT NOT NULL,
-                            created_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-                            updated_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-                            FOREIGN KEY (host_id) REFERENCES users(user_id) ON DELETE CASCADE
-                        );
-                    """)
-                )
-                cur.execute(sql.SQL(
-                    """
-                        CREATE TABLE IF NOT EXISTS appt_types (
-                            appt_type_id SERIAL PRIMARY KEY,
-                            service_id INTEGER NOT NULL,
-                            appt_type_name TEXT NOT NULL,
-                            appt_duration_minutes INTEGER NOT NULL,
-                            created_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-                            updated_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-                            UNIQUE (service_id, appt_type_name),
-                            CHECK (appt_duration_minutes > 0),
-                            FOREIGN KEY (service_id) REFERENCES services(service_id) ON DELETE CASCADE
-                        );
-                    """)
-                )
-                cur.execute(sql.SQL(
-                    """
-                        CREATE TABLE IF NOT EXISTS appts (
-                            appt_id SERIAL PRIMARY KEY,
-                            user_id INTEGER NOT NULL,
-                            service_id INTEGER NOT NULL,
-                            appt_type_name TEXT NOT NULL,
-                            appt_starts_at TEXT NOT NULL,
-                            appt_ends_at TEXT NOT NULL,
-                            created_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-                            updated_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-                            FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-                            FOREIGN KEY (service_id) REFERENCES services(service_id) ON DELETE CASCADE,
-                            FOREIGN KEY (service_id, appt_type_name) REFERENCES appt_types(service_id, appt_type_name) ON DELETE CASCADE
-                        );
-                    """)
-                )
+                dir = Path(CONFIG.DATABASE_MIGRATIONS_RELATIVE_PATH)
+                f_list = list()
+                
+                # iterate through the files in the migrations directory, and store the filenames
+                for f in dir.iterdir():
+                    if f.name.endswith(".up.sql"): # convention is that up-migrations end with up.sql, and down-migrations end with down.sql
+                        f_list.append(f.name)
+                
+                # want to run scripts in order
+                f_list.sort()
+                print(f_list)
+                
+                # execute each script
+                for f_name in f_list:
+                    f_path = dir / f_name
+                    with open(f_path, "r") as f:
+                        cur.execute(f.read())
+                        print(f"Executed {str(f_path)}")
+
                 cur.close()
             return conn
         except Exception as e:

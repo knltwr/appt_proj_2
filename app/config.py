@@ -24,6 +24,8 @@ class Config(BaseSettings):
     DATABASE_MAINT_DB_PASSWORD: str
     DATABASE_MAINT_DB_NAME: str
 
+    DATABASE_MIGRATIONS_RELATIVE_PATH: str
+
     DT_DATETIME_FORMAT: str
     DT_TIME_FORMAT: str
     
