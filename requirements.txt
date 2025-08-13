@@ -22,6 +22,7 @@ mdurl==0.1.2
 orjson==3.10.15
 psycopg==3.2.6
 psycopg-binary==3.2.6
+psycopg-pool==3.2.6
 pydantic==2.10.6
 pydantic-extra-types==2.10.3
 pydantic-settings==2.8.1

@@ -10,12 +10,12 @@ router = APIRouter(prefix="/users", tags=['Users'])
 
 
 @router.post("", status_code = status.HTTP_201_CREATED, response_model = schemas_users.UserCreateResponse)
-def user_create(user: schemas_users.UserCreateRequest, db: Database = Depends(Database)):
+async def user_create(user: schemas_users.UserCreateRequest, db: Database = Depends(Database)):
       
     user.password = get_hashed_salted_password(user.password)
 
     try:
-        user_from_db = db.insert_user(**user.model_dump())
+        user_from_db = await db.insert_user(**user.model_dump())
     except psycopg.errors.UniqueViolation as e:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail = f"Email in use: {e}") # instead of checking whether email is in use beforehand, using the database error
     except psycopg.Error as e:
@@ -27,7 +27,7 @@ def user_create(user: schemas_users.UserCreateRequest, db: Database = Depends(Da
     return schemas_users.UserCreateResponse(**user_from_db) # if Pydantic model is not followed, this throws error
     
 @router.get("", status_code = status.HTTP_200_OK, response_model = schemas_users.UserGetResponse)
-def user_get(db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def user_get(db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
 
     user_id = int(payload.user_id)
     
@@ -35,7 +35,7 @@ def user_get(db: Database = Depends(Database), payload: schemas_oauth2.TokenPayl
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Something went wrong")  # this shouldn't happen though
 
     try:
-        user_from_db = db.get_user_by_user_id(user_id)
+        user_from_db = await db.get_user_by_user_id(user_id)
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
     

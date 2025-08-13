@@ -11,7 +11,7 @@ from app.utils.util_funcs import get_formatted_time, get_formatted_datetime
 router = APIRouter(prefix="/appts", tags=['Appointments'])
 
 @router.post("", status_code = status.HTTP_201_CREATED, response_model = schemas_appts.ApptCreateResponse)
-def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
       
     user_id = int(payload.user_id)
     
@@ -21,7 +21,7 @@ def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Da
     appt_dict = appt.model_dump()
 
     try:
-        service_from_db = db.get_service_by_service_id(appt_dict["service_id"])
+        service_from_db = await db.get_service_by_service_id(appt_dict["service_id"])
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
     
@@ -29,7 +29,7 @@ def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Da
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "Service not found")
     
     try:
-        appt_type_from_db = db.get_appt_type_by_service_id_and_appt_type_name(appt_dict["service_id"], appt_dict["appt_type_name"])
+        appt_type_from_db = await db.get_appt_type_by_service_id_and_appt_type_name(appt_dict["service_id"], appt_dict["appt_type_name"])
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
     
@@ -83,10 +83,10 @@ def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Da
         raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Could not create appointment due to invalid appointment time")
 
     # NEED TO CHECK IN DB FOR CONFLICT WITH ANY EXISTING APPOINTMENT
-    appt_conflict_check = db.get_conflicting_appt(appt_dict["service_id"], appt_dict["appt_type_name"], str(appt_starts_at), str(appt_ends_at))
+    appt_conflict_check = await db.get_conflicting_appt(appt_dict["service_id"], appt_dict["appt_type_name"], str(appt_starts_at), str(appt_ends_at))
     if appt_conflict_check is not None:
         raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Could not create appointment due to service having conflict at the time")
         
-    created_appt = db.insert_appt(user_id, appt_dict["service_id"], appt_dict["appt_type_name"], appt_starts_at, appt_ends_at)
+    created_appt = await db.insert_appt(user_id, appt_dict["service_id"], appt_dict["appt_type_name"], appt_starts_at, appt_ends_at)
     
     return schemas_appts.ApptCreateResponse(**created_appt) # if Pydantic model is not followed, this throws error

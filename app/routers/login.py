@@ -10,10 +10,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 router = APIRouter(prefix="/login", tags=['Authentication'])
 
 @router.post("", status_code = status.HTTP_200_OK, response_model = schemas_oauth2.Token)
-def login(login_req: OAuth2PasswordRequestForm = Depends(), db: Database = Depends()): # login_req: auth.LoginRequest ... OAuth2PasswordRequestForm looks for Form Data in request
+async def login(login_req: OAuth2PasswordRequestForm = Depends(), db: Database = Depends()): # login_req: auth.LoginRequest ... OAuth2PasswordRequestForm looks for Form Data in request
 
     try:
-        user_from_db = db.get_user_by_email(login_req.username) # username is the term OAuth2PasswordRequestForm uses, but it maps to the email for us
+        user_from_db = await db.get_user_by_email(login_req.username) # username is the term OAuth2PasswordRequestForm uses, but it maps to the email for us
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
 

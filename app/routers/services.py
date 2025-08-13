@@ -9,7 +9,7 @@ from app.schemas import appt_types as schemas_appt_types
 router = APIRouter(prefix="/services", tags=['Services'])
 
 @router.post("", status_code = status.HTTP_201_CREATED, response_model = schemas_services.ServiceCreateResponse)
-def service_create(service: schemas_services.ServiceCreateRequest, db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def service_create(service: schemas_services.ServiceCreateRequest, db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
       
     user_id = int(payload.user_id)
     
@@ -20,7 +20,7 @@ def service_create(service: schemas_services.ServiceCreateRequest, db: Database 
     data_for_db.update({"host_id": user_id})
 
     try:
-        service_from_db = db.insert_service(**data_for_db)
+        service_from_db = await db.insert_service(**data_for_db)
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
     
@@ -30,7 +30,7 @@ def service_create(service: schemas_services.ServiceCreateRequest, db: Database 
     return schemas_services.ServiceCreateResponse(**service_from_db) # if Pydantic model is not followed, this throws error
 
 @router.get("", status_code=status.HTTP_200_OK, response_model= list[schemas_services.ServiceGetResponse])
-def service_get(db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def service_get(db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
 
     user_id = int(payload.user_id)
     
@@ -38,7 +38,7 @@ def service_get(db: Database = Depends(Database), payload: schemas_oauth2.TokenP
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Something went wrong")  # this shouldn't happen though
     
     try:
-        services_from_db = db.get_services_by_host_id(user_id)
+        services_from_db = await db.get_services_by_host_id(user_id)
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
     
@@ -52,7 +52,7 @@ def service_get(db: Database = Depends(Database), payload: schemas_oauth2.TokenP
     return ret # if Pydantic model is not followed, this throws error
 
 @router.get("/{service_id}", status_code=status.HTTP_200_OK, response_model= schemas_services.ServiceGetResponse)
-def service_get(service_id: int, db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def service_get(service_id: int, db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
 
     user_id = int(payload.user_id)
     
@@ -60,7 +60,7 @@ def service_get(service_id: int, db: Database = Depends(Database), payload: sche
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Something went wrong")  # this shouldn't happen though
     
     try:
-        service_from_db = db.get_service_by_service_id(service_id)
+        service_from_db = await db.get_service_by_service_id(service_id)
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
     
@@ -73,7 +73,7 @@ def service_get(service_id: int, db: Database = Depends(Database), payload: sche
     return schemas_services.ServiceGetResponse(**service_from_db)
 
 @router.post("/{service_id}/appt-types", status_code = status.HTTP_201_CREATED, response_model = schemas_appt_types.ApptTypeCreateResponse)
-def appt_types_create(service_id: int, appt_type: schemas_appt_types.ApptTypeCreateRequest, db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def appt_types_create(service_id: int, appt_type: schemas_appt_types.ApptTypeCreateRequest, db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
 
     user_id = int(payload.user_id)
     
@@ -81,7 +81,7 @@ def appt_types_create(service_id: int, appt_type: schemas_appt_types.ApptTypeCre
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Something went wrong")  # this shouldn't happen though
 
     try:
-        service_from_db = db.get_service_by_service_id(service_id)
+        service_from_db = await db.get_service_by_service_id(service_id)
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")
     
@@ -94,7 +94,7 @@ def appt_types_create(service_id: int, appt_type: schemas_appt_types.ApptTypeCre
     try:
         appt_type_dict = appt_type.model_dump()
         appt_type_dict.update({"service_id": service_id})
-        appt_type_from_db = db.insert_appt_type(**appt_type_dict)
+        appt_type_from_db = await db.insert_appt_type(**appt_type_dict)
 
     except psycopg.Error as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Database issue occurred: {e}")

@@ -2,5 +2,4 @@ venv
 __pycache__
 .env
 todo.txt
-db_init.py
 run_script.sh
