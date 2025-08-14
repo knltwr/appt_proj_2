@@ -3,14 +3,27 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
 from typing import Optional
 from app.routers import login, users, services, appts
+from contextlib import asynccontextmanager
+from app.database.db import Database
 
 import json
 
-app = FastAPI()
+# to make available the database and connection pool before the app is up and running
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    DB = Database() # since Database() is decorated w/ @singleton, anywhere DB is used, it should refer to the same object
+    await DB.db_open()
+    yield # this hands off control to the FastAPI app, and returns to run the below statements when the app is shut down
+    await DB.db_close()
+    del DB
+
+app = FastAPI(lifespan = lifespan)
 app.include_router(users.router)
 app.include_router(login.router)
 app.include_router(services.router)
 app.include_router(appts.router)
+
+
 
 # RequestValidationError is for when Pydantic throws an error
 @app.exception_handler(RequestValidationError)

@@ -25,6 +25,7 @@ class Database:
                                         min_size = 5,
                                         max_size = 10,
                                         open = True,
+                                        recycle = 300, # connection reaping
                                         dbname = dbname, 
                                         user = user, 
                                         password = password, 
@@ -36,6 +37,21 @@ class Database:
         except psycopg.OperationalError as e:            
             if re.search(r"database.*does not exist", e.args[0]): # regex ".*" matches any characters
                 print(f'{dbname} does not exist; see db init file')    
+            traceback.print_exc()
+            raise e
+        
+    async def db_open(self):
+        try:
+            await self.pool.open() # might be rendundant since using "open" argument in initializer
+            await self.pool.wait()
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+
+    async def db_close(self):
+        try:
+            await self.pool.close()
+        except Exception as e:
             traceback.print_exc()
             raise e
         
