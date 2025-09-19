@@ -17,21 +17,15 @@ class Database:
                  user: str = CONFIG.DATABASE_USERNAME, 
                  password: str = CONFIG.DATABASE_PASSWORD, 
                  host: str = CONFIG.DATABASE_HOSTNAME, 
-                 port: int = CONFIG.DATABASE_PORT, 
-                 row_factory: object = dict_row
+                 port: int = CONFIG.DATABASE_PORT
                  ):
         try:
             self.pool = AsyncConnectionPool(
+                                        conninfo = f"postgres://{user}:{password}@{host}:{port}/{dbname}",
                                         min_size = 5,
                                         max_size = 10,
-                                        open = True,
-                                        recycle = 300, # connection reaping
-                                        dbname = dbname, 
-                                        user = user, 
-                                        password = password, 
-                                        host = host, 
-                                        port = port, 
-                                        row_factory = row_factory
+                                        open = True
+                                        # recycle = 300, # connection reaping
                                         )
             self.dbname = dbname
         except psycopg.OperationalError as e:            
@@ -61,6 +55,7 @@ class Database:
                     ) -> dict:
         try:
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """
@@ -79,6 +74,7 @@ class Database:
                           ) -> dict: # add in annotation for user model as return type? causes issue though if None returned from query
         try:
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """
@@ -86,7 +82,7 @@ class Database:
                         """,
                         (email, )
                     )
-                    res = cursor.fetchone()
+                    res = await cursor.fetchone()
                     return res
         except Exception as e:
             traceback.print_exc()
@@ -97,6 +93,7 @@ class Database:
                           ) -> dict: # add in annotation for user model as return type? causes issue though if None returned from query
         try:
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """
@@ -125,6 +122,7 @@ class Database:
                        ) -> dict:
         try:
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """
@@ -179,6 +177,7 @@ class Database:
                                 host_id: int):
         try:
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """
@@ -196,6 +195,7 @@ class Database:
                                 service_id: int):
         try:
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """
@@ -225,6 +225,7 @@ class Database:
             #                        ) as conn:
             #     cursor = conn.cursor()
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """
@@ -252,6 +253,7 @@ class Database:
             #                        ) as conn:
             #     cursor = conn.cursor()
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """
@@ -290,6 +292,7 @@ class Database:
             #                        ) as conn:
             #     cursor = conn.cursor()
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """
@@ -332,6 +335,7 @@ class Database:
             #                        ) as conn:
             #     cursor = conn.cursor()
             async with self.pool.connection() as conn:
+                conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         """

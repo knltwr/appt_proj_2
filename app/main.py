@@ -1,3 +1,9 @@
+
+import os
+import asyncio
+if os.name == 'nt':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 from fastapi import FastAPI, Depends, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
@@ -5,6 +11,7 @@ from typing import Optional
 from app.routers import login, users, services, appts
 from contextlib import asynccontextmanager
 from app.database.db import Database
+
 
 import json
 
@@ -16,6 +23,7 @@ async def lifespan(app: FastAPI):
     yield # this hands off control to the FastAPI app, and returns to run the below statements when the app is shut down
     await DB.db_close()
     del DB
+
 
 app = FastAPI(lifespan = lifespan)
 app.include_router(users.router)
@@ -36,3 +44,8 @@ def root():
         "success":True,
         "data": "root"
         }
+
+import uvicorn
+
+if __name__ == '__main__':
+    uvicorn.run(app, host = "127.0.0.1", port = 8000, reload = False) # had to do this instead of CLI uvicorn b/c of this on windows affecting asyncio

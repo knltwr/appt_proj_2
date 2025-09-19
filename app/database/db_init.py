@@ -1,5 +1,5 @@
 import psycopg
-from app.database.db import Database
+# from app.database.db import Database
 from app.config import CONFIG
 import traceback
 from psycopg.rows import dict_row
