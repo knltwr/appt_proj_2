@@ -14,7 +14,8 @@ A RESTful API for service providers to allow patrons to book appointments.
 
 ## Installation
 - Clone repo
-- pip install packages from requirements.txt
+- Install dependencies (recommended to do so within a Python venv)
+    - pip install -r requirements.txt
 - Add environment variables (see .env.example)
 
 ## Example of app usage
