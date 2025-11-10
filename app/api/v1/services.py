@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from app.schemas import oauth2 as schemas_oauth2
 from app.database.db import Database
 import psycopg
-from app.utils.oauth2 import get_current_user
+from app.core.oauth2 import get_current_user
 from app.schemas import services as schemas_services
 from app.schemas import appt_types as schemas_appt_types
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from app.config import CONFIG
+from app.core.config import CONFIG
 from datetime import datetime
 from app.utils.util_funcs import get_formatted_datetime, get_formatted_time
 

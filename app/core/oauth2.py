@@ -5,7 +5,7 @@ from datetime import timedelta, datetime, timezone
 from app.schemas import oauth2 as schemas_oauth2
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from app.config import CONFIG
+from app.core.config import CONFIG
 
 SECRET_KEY = CONFIG.OAUTH2_SECRET_KEY # openssl rand -hex 32
 ALGORITHM = CONFIG.OAUTH2_ALGORITHM

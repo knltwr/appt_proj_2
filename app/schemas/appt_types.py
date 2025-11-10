@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from app.config import CONFIG
+from app.core.config import CONFIG
 from datetime import datetime
 
 class ApptTypeCreateRequest(BaseModel):

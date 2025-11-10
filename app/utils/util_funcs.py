@@ -1,7 +1,7 @@
 import bcrypt
 from typing import Any
 import json
-from app.config import CONFIG
+from app.core.config import CONFIG
 import datetime
 
 def get_hashed_salted_password(password: str) -> str:
@@ -28,3 +28,13 @@ def get_formatted_datetime(inp) -> datetime:
 
 def get_formatted_time(inp) -> datetime:
     return datetime.datetime.strptime(str(inp), CONFIG.DT_TIME_FORMAT).time()
+
+def singleton(cls):
+    instances = {}
+
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls()
+        return instances[cls]
+
+    return getinstance

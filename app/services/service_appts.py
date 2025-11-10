@@ -1,23 +1,12 @@
-from fastapi import APIRouter, status, Depends, HTTPException
-from app.schemas import oauth2 as schemas_oauth2
+from fastapi import status, Depends, HTTPException
 from app.database.db import Database
 import psycopg
-from app.utils.oauth2 import get_current_user
 from app.schemas import appts as schemas_appts
 import datetime
-from app.config import CONFIG
-from app.utils.util_funcs import get_formatted_time, get_formatted_datetime
+from app.core.config import CONFIG
+from app.utils.util_funcs import get_formatted_time
 
-router = APIRouter(prefix="/appts", tags=['Appointments'])
-
-@router.post("", status_code = status.HTTP_201_CREATED, response_model = schemas_appts.ApptCreateResponse)
-async def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(Database), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
-      
-    user_id = int(payload.user_id)
-    
-    if user_id is None:
-        raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Something went wrong")  # this shouldn't happen though
-    
+async def service_appt_create(appt: schemas_appts.ApptCreateRequest, db: Database, user_id: int):
     appt_dict = appt.model_dump()
 
     try:
@@ -89,4 +78,4 @@ async def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depe
         
     created_appt = await db.insert_appt(user_id, appt_dict["service_id"], appt_dict["appt_type_name"], appt_starts_at, appt_ends_at)
     
-    return schemas_appts.ApptCreateResponse(**created_appt) # if Pydantic model is not followed, this throws error
+    return created_appt

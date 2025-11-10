@@ -3,8 +3,8 @@ from psycopg_pool import AsyncConnectionPool
 from psycopg.rows import dict_row
 import re
 import traceback
-from app.config import CONFIG
-from app.utils.other_funcs import singleton
+from app.core.config import CONFIG
+from app.utils.util_funcs import singleton
 
 @singleton
 class Database:

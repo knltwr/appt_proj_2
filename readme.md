@@ -11,6 +11,7 @@ A RESTful API for service providers to allow patrons to book appointments.
 - Framework: FastAPI (w/ async)
 - Database: PostgreSQL (raw SQL, i.e. no ORM) using async connection pool
 - Authentication: JWT
+- Others: pydantic (data validation)
 
 ## Installation
 - Clone repo
@@ -34,3 +35,4 @@ See the swagger documentation for details on routes
 ## Potential tech enhancements
 - Employ Docker for portability
 - Incorporate NGINX for security and load balancing
+- Formalize logging

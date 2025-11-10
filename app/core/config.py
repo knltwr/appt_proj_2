@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from app.utils.other_funcs import singleton
+from app.utils.util_funcs import singleton
 
 @singleton
 class Config(BaseSettings):

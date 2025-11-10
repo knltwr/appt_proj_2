@@ -1,6 +1,6 @@
 import psycopg
 # from app.database.db import Database
-from app.config import CONFIG
+from app.core.config import CONFIG
 import traceback
 from psycopg.rows import dict_row
 from psycopg import sql

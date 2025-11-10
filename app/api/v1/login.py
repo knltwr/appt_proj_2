@@ -4,7 +4,7 @@ from app.schemas import users as schemas_users
 from app.utils.util_funcs import is_correct_password
 from app.database.db import Database
 import psycopg
-import app.utils.oauth2 as oauth2
+import app.core.oauth2 as oauth2
 from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(prefix="/login", tags=['Authentication'])
