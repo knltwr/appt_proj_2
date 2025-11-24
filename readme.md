@@ -17,7 +17,10 @@ A RESTful API for service providers to allow patrons to book appointments.
 - Clone repo
 - Install dependencies (recommended to do so within a Python venv)
     - pip install -r requirements.txt
+- Make available a postgresql server; note the default (maintenance) database parameters
 - Add environment variables (see .env.example)
+    - DATABASE_MAINT_* refer to the paramaters for default (maintenance) database when the postgresql server is created
+- Use app/database/db_init.py to initialize the database
 
 ## Example of app usage
 See the swagger documentation for details on routes
