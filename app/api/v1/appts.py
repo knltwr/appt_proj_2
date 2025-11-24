@@ -4,11 +4,12 @@ from app.database.db import Database
 from app.core.oauth2 import get_current_user
 from app.schemas import appts as schemas_appts
 from app.services.service_appts import service_appt_create
+from app.dependencies import get_db
 
 router = APIRouter(prefix="/appts", tags=['Appointments'])
 
 @router.post("", status_code = status.HTTP_201_CREATED, response_model = schemas_appts.ApptCreateResponse)
-async def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depends(get_db), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
       
     user_id = int(payload.user_id)
     

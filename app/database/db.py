@@ -4,9 +4,7 @@ from psycopg.rows import dict_row
 import re
 import traceback
 from app.core.config import CONFIG
-from app.utils.util_funcs import singleton
 
-@singleton
 class Database:
 
     pool = None
@@ -348,3 +346,5 @@ class Database:
         except Exception as e:
             traceback.print_exc()
             raise e
+        
+db = Database()

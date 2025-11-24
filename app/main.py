@@ -9,7 +9,7 @@ from fastapi.responses import PlainTextResponse
 from typing import Optional
 from app.api.router import router
 from contextlib import asynccontextmanager
-from app.database.db import Database
+from app.database.db import db
 
 
 import json
@@ -17,11 +17,9 @@ import json
 # to make available the database and connection pool before the app is up and running
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    DB = Database() # since Database() is decorated w/ @singleton, anywhere DB is used, it should refer to the same object
-    await DB.db_open()
+    await db.db_open()
     yield # this hands off control to the FastAPI app, and returns to run the below statements when the app is shut down
-    await DB.db_close()
-    del DB
+    await db.db_close()
 
 
 app = FastAPI(lifespan = lifespan)

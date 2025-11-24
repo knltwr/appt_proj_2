@@ -5,11 +5,12 @@ from app.core.oauth2 import get_current_user
 from app.schemas import services as schemas_services
 from app.schemas import appt_types as schemas_appt_types
 from app.services.service_services import service_appt_types_create, service_services_get, service_services_get_by_id, service_appt_types_create
+from app.dependencies import get_db
 
 router = APIRouter(prefix="/services", tags=['Services'])
 
 @router.post("", status_code = status.HTTP_201_CREATED, response_model = schemas_services.ServiceCreateResponse)
-async def services_create(service: schemas_services.ServiceCreateRequest, db: Database = Depends(), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def services_create(service: schemas_services.ServiceCreateRequest, db: Database = Depends(get_db), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
       
     user_id = int(payload.user_id)
     
@@ -21,7 +22,7 @@ async def services_create(service: schemas_services.ServiceCreateRequest, db: Da
     return schemas_services.ServiceCreateResponse(**service_from_db) # if Pydantic model is not followed, this throws error
 
 @router.get("", status_code=status.HTTP_200_OK, response_model= list[schemas_services.ServiceGetResponse])
-async def services_get(db: Database = Depends(), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def services_get(db: Database = Depends(get_db), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
 
     user_id = int(payload.user_id)
     
@@ -37,7 +38,7 @@ async def services_get(db: Database = Depends(), payload: schemas_oauth2.TokenPa
     return ret # if Pydantic model is not followed, this throws error
 
 @router.get("/{service_id}", status_code=status.HTTP_200_OK, response_model= schemas_services.ServiceGetResponse)
-async def services_get_by_id(service_id: int, db: Database = Depends(), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def services_get_by_id(service_id: int, db: Database = Depends(get_db), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
 
     user_id = int(payload.user_id)
     
@@ -49,7 +50,7 @@ async def services_get_by_id(service_id: int, db: Database = Depends(), payload:
     return schemas_services.ServiceGetResponse(**service_from_db)
 
 @router.post("/{service_id}/appt-types", status_code = status.HTTP_201_CREATED, response_model = schemas_appt_types.ApptTypeCreateResponse)
-async def appt_types_create(service_id: int, appt_type: schemas_appt_types.ApptTypeCreateRequest, db: Database = Depends(), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
+async def appt_types_create(service_id: int, appt_type: schemas_appt_types.ApptTypeCreateRequest, db: Database = Depends(get_db), payload: schemas_oauth2.TokenPayload = Depends(get_current_user)):
 
     user_id = int(payload.user_id)
     
