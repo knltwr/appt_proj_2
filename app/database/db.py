@@ -22,7 +22,7 @@ class Database:
                                         conninfo = f"postgres://{user}:{password}@{host}:{port}/{dbname}",
                                         min_size = 5,
                                         max_size = 10,
-                                        open = True
+                                        open = False # set as False b/c to be opened in db_open()
                                         # recycle = 300, # connection reaping
                                         )
             self.dbname = dbname
@@ -34,7 +34,7 @@ class Database:
         
     async def db_open(self):
         try:
-            await self.pool.open() # might be rendundant since using "open" argument in initializer
+            await self.pool.open()
             await self.pool.wait()
         except Exception as e:
             traceback.print_exc()

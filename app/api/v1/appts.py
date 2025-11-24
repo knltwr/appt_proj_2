@@ -16,6 +16,6 @@ async def appt_create(appt: schemas_appts.ApptCreateRequest, db: Database = Depe
     if user_id is None:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Something went wrong")  # this shouldn't happen though
     
-    created_appt = await service_appt_create.appt_create(appt, db, user_id)
+    created_appt = await service_appt_create(appt, db, user_id)
     
     return schemas_appts.ApptCreateResponse(**created_appt) # if Pydantic model is not followed, this throws error

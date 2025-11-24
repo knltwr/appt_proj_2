@@ -4,7 +4,7 @@ from app.database.db import Database
 from app.core.oauth2 import get_current_user
 from app.schemas import services as schemas_services
 from app.schemas import appt_types as schemas_appt_types
-from app.services.service_services import service_appt_types_create, service_services_get, service_services_get_by_id, service_appt_types_create
+from app.services.service_services import service_services_create, service_services_get, service_services_get_by_id, service_appt_types_create
 from app.dependencies import get_db
 
 router = APIRouter(prefix="/services", tags=['Services'])
@@ -17,7 +17,7 @@ async def services_create(service: schemas_services.ServiceCreateRequest, db: Da
     if user_id is None:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Something went wrong")  # this shouldn't happen though
 
-    service_from_db = await service_appt_types_create(service, db, user_id)
+    service_from_db = await service_services_create(service, db, user_id)
     
     return schemas_services.ServiceCreateResponse(**service_from_db) # if Pydantic model is not followed, this throws error
 
@@ -29,7 +29,7 @@ async def services_get(db: Database = Depends(get_db), payload: schemas_oauth2.T
     if user_id is None:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Something went wrong")  # this shouldn't happen though
     
-    services_from_db = service_services_get(db, user_id)
+    services_from_db = await service_services_get(db, user_id)
     
     ret = list()
     for service in services_from_db:

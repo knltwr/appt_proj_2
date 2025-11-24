@@ -28,13 +28,3 @@ def get_formatted_datetime(inp) -> datetime:
 
 def get_formatted_time(inp) -> datetime:
     return datetime.datetime.strptime(str(inp), CONFIG.DT_TIME_FORMAT).time()
-
-def singleton(cls):
-    instances = {}
-
-    def getinstance():
-        if cls not in instances:
-            instances[cls] = cls()
-        return instances[cls]
-
-    return getinstance
