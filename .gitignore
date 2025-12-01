@@ -3,4 +3,3 @@ __pycache__
 .env
 todo.txt
 run_script.sh
-.gitignore
