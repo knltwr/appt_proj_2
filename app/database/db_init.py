@@ -5,10 +5,9 @@ import traceback
 from psycopg.rows import dict_row
 from psycopg import sql
 from pathlib import Path
+import sys
 
-def drop_database(self,
-                    dbname: str = CONFIG.DATABASE_NAME
-                    ) -> None:
+def drop_database(dbname: str) -> None:
     
     if dbname == CONFIG.DATABASE_MAINT_DB_NAME:
         raise Exception(f"Tried to drop maintenance database: {CONFIG.DATABASE_MAINT_DB_NAME}")
@@ -35,9 +34,12 @@ def drop_database(self,
         raise e
     
 
-def init_database(self,
-                    dbname: str = CONFIG.DATABASE_NAME
-                    ) -> None:
+def init_database(dbname: str,
+                  user: str,
+                  password: str,
+                  host: str,
+                  port: int
+                  ) -> None:
     conn = None
     try:
         conn = psycopg.connect(dbname = CONFIG.DATABASE_MAINT_DB_NAME, 
@@ -59,10 +61,10 @@ def init_database(self,
         del conn
         
         conn = psycopg.connect(dbname = dbname, 
-                                user = CONFIG.DATABASE_USERNAME, 
-                                password = CONFIG.DATABASE_PASSWORD, 
-                                host = CONFIG.DATABASE_HOSTNAME, 
-                                port = CONFIG.DATABASE_PORT, 
+                                user = user, 
+                                password = password, 
+                                host = host, 
+                                port = port,
                                 row_factory = dict_row
                                 )
         with conn:
@@ -89,16 +91,33 @@ def init_database(self,
 
             cur.close()
     except Exception as e:
-        if self.pool:
-            self.pool.close() # if database did not set up correctly, do not want to continue
+        if conn:
+            conn.close() # if database did not set up correctly, do not want to continue
         traceback.print_exc()
         exit(1)
 
 if __name__ == "__main__":
     try:
-        drop_database(CONFIG.DATABASE_NAME)
+        if sys.argv[1] == "prod":
+            dbname = CONFIG.DATABASE_NAME
+            user = CONFIG.DATABASE_USERNAME
+            password = CONFIG.DATABASE_PASSWORD
+            host = CONFIG.DATABASE_HOSTNAME
+            port = CONFIG.DATABASE_PORT
+        elif sys.argv[1] == "test":
+            dbname = CONFIG.DATABASE_TEST_DB_NAME
+            user = CONFIG.DATABASE_TEST_DB_USERNAME
+            password = CONFIG.DATABASE_TEST_DB_PASSWORD
+            host = CONFIG.DATABASE_TEST_DB_HOSTNAME
+            port = CONFIG.DATABASE_TEST_DB_PORT
+        else:
+            print("arg should only be prod or test")
+
+        drop_database(dbname= dbname)
         print(f"Dropped {CONFIG.DATABASE_NAME}")
         init_database(CONFIG.DATABASE_NAME)
         print(f"Created {CONFIG.DATABASE_NAME}")    
     except psycopg.Error as e:
+        traceback.print_exc()
+    except Exception as e:
         traceback.print_exc()
