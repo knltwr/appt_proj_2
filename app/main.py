@@ -6,17 +6,16 @@ if os.name == 'nt':
 from fastapi import FastAPI, Depends, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
-from typing import Optional
 from app.api.router import router
 from contextlib import asynccontextmanager
-from app.database.db import db
-
+from app.dependencies import get_db
 
 import json
 
 # to make available the database and connection pool before the app is up and running
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    db = await get_db()
     await db.db_open()
     yield # this hands off control to the FastAPI app, and returns to run the below statements when the app is shut down
     await db.db_close()

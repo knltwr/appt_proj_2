@@ -1,10 +1,14 @@
 from app.database.db_init import init_database, drop_database
-from app.database.db import Database
+from app.database.db import Database, _reset_db
 from app.core.config import CONFIG
 import traceback
+import pytest
+from app.dependencies import get_db
+from app.main import app
+from httpx import AsyncClient
 
-
-def setup_test_db(): # can make async if needed
+@pytest.fixture(scope="session")
+def test_db(): # can make async if needed
     try:
         drop_database(dbname = CONFIG.DATABASE_TEST_DB_NAME)
         init_database(
@@ -21,12 +25,35 @@ def setup_test_db(): # can make async if needed
             host = CONFIG.DATABASE_TEST_DB_HOSTNAME,
             port = CONFIG.DATABASE_TEST_DB_PORT 
         )
+        print("Test database setup complete")
         test_db.db_open()
+        print("Test database opened")
         yield test_db
+        print("Test database closed")
         test_db.db_close()
         drop_database(dbname = CONFIG.DATABASE_TEST_DB_NAME)
+        print("Test database teardown complete")
+    except Exception as e:
+        traceback.print_exc()
+        raise e
+
+@pytest.fixture(scope="session")
+def override_dependency_db(test_db):
+    app.dependency_overrides[get_db] = lambda: test_db # need to overlay lambda because whatever is assigned here gets called, and test_db is an object not callable
+    yield
+    app.dependency_overrides.clear()
+
+@pytest.fixture(scope="function", autouse=True)
+async def _reset_db_fixture(override_dependency_db): # making override_dependency_db a dependency to ensure it runs before this
+    try:
+        await test_db._reset_db()
+        yield
     except Exception as e:
         traceback.print_exc()
         raise e
     
-
+@pytest.fixture(scope="function")
+async def test_client(_reset_doverride_dependency_dbb_fixture): # making override_dependency_db a dependency to ensure it runs before this
+    async with app.router.lifespan_context(app): # reusing same lifespan defined in main
+        async with AsyncClient(app = app, base_url = "http://test") as test_client:
+            yield test_client
