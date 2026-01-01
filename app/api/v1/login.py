@@ -3,7 +3,7 @@ from app.schemas import oauth2 as schemas_oauth2
 from app.utils.util_funcs import is_correct_password
 from app.database.db import Database
 from fastapi.security import OAuth2PasswordRequestForm
-from app.services.service_login import service_login
+from app.services.login import service_login
 from app.dependencies import get_db
 
 router = APIRouter(prefix="/login", tags=['Authentication'])

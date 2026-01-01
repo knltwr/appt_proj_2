@@ -5,7 +5,7 @@ import psycopg
 from app.core.oauth2 import get_current_user
 from app.schemas import users as schemas_users
 from app.schemas import oauth2 as schemas_oauth2
-from app.services.service_users import service_user_create, service_user_get
+from app.services.users import service_user_create, service_user_get
 from app.dependencies import get_db
 
 router = APIRouter(prefix="/users", tags=['Users'])

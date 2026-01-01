@@ -347,7 +347,7 @@ class Database:
             traceback.print_exc()
             raise e
         
-    async def _reset_db(self) -> None: # name mangled ... only for use in tests
+    async def reset_db(self) -> None: # only for use in tests
         try:
             async with self.pool.connection() as conn:
                 conn.row_factory = dict_row
@@ -357,8 +357,7 @@ class Database:
                             TRUNCATE TABLE users, services, appt_types, appts CASCADE;
                         """,
                     )
-                    res = await cursor.fetchone()
-                    return res
+                    return
         except Exception as e:
             traceback.print_exc()
             raise e

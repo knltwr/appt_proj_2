@@ -4,7 +4,7 @@ from app.database.db import Database
 from app.core.oauth2 import get_current_user
 from app.schemas import services as schemas_services
 from app.schemas import appt_types as schemas_appt_types
-from app.services.service_services import service_services_create, service_services_get, service_services_get_by_id, service_appt_types_create
+from app.services.services import service_services_create, service_services_get, service_services_get_by_id, service_appt_types_create
 from app.dependencies import get_db
 
 router = APIRouter(prefix="/services", tags=['Services'])

@@ -3,7 +3,7 @@ from app.schemas import oauth2 as schemas_oauth2
 from app.database.db import Database
 from app.core.oauth2 import get_current_user
 from app.schemas import appts as schemas_appts
-from app.services.service_appts import service_appt_create
+from app.services.appts import service_appt_create
 from app.dependencies import get_db
 
 router = APIRouter(prefix="/appts", tags=['Appointments'])
