@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS services (
     city TEXT NOT NULL,
     state TEXT NOT NULL,
     zip_code TEXT NOT NULL,
-    phone_number TEXT UNIQUE NOT NULL,
+    phone_number TEXT NOT NULL,
     is_open_mo INTEGER NOT NULL DEFAULT 0,
     open_time_mo TEXT NOT NULL,
     close_time_mo TEXT NOT NULL,
@@ -31,5 +31,6 @@ CREATE TABLE IF NOT EXISTS services (
     close_time_su TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+    UNIQUE (phone_number),
     FOREIGN KEY (host_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
