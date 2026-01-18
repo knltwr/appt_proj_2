@@ -44,8 +44,17 @@ async def override_dependency_db(test_db): # can make this async w/o an await b/
     yield
     app.dependency_overrides.clear()
 
+@pytest_asyncio.fixture(scope="class")
+async def reset_db_fixture_class_level(override_dependency_db, test_db): # making override_dependency_db, test_db (order matters) dependency to ensure it runs before this
+    try:
+        await test_db.reset_db()
+        yield
+    except Exception as e:
+        traceback.print_exc()
+        raise e
+    
 @pytest_asyncio.fixture(scope="function", autouse=True)
-async def reset_db_fixture(override_dependency_db, test_db): # making override_dependency_db, test_db (order matters) dependency to ensure it runs before this
+async def reset_db_fixture_function_level(override_dependency_db, test_db): # making override_dependency_db, test_db (order matters) dependency to ensure it runs before this
     try:
         await test_db.reset_db()
         yield
