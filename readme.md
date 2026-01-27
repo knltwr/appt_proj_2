@@ -7,7 +7,7 @@ A RESTful API for service providers to allow patrons to book appointments.
 - Book appointments with businesses or services that are available on the app.
 
 ## Tech Stack
-- Language: Python
+- Language: Python (3.12.9)
 - Framework: FastAPI (w/ async)
 - Database: PostgreSQL (raw SQL, i.e. no ORM) using async connection pool
 - Authentication: JWT

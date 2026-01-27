@@ -28,7 +28,6 @@ class TestUsers:
     @pytest.mark.parametrize(
         "email, password, should_raise_exc", 
         [
-            ("bruh@email.com", "password123", False), # normal
             (None, "password123", True), # null email (empty string)
             ("bruh@email.com", None, True), # null password
         ])
@@ -136,6 +135,8 @@ class TestServices:
         assert int(inserted_service.get("is_open_su")) == is_open_su
         assert inserted_service.get("open_time_su") == open_time_su
         assert inserted_service.get("close_time_su") == close_time_su
+        assert inserted_service.get("created_at") is not None
+        assert inserted_service.get("updated_at") is not None
 
     @pytest.mark.asyncio
     async def test_insert_service_constraints_notnull(self, test_db):
@@ -221,8 +222,75 @@ class TestApptType:
         service_id = int(inserted_service.get("service_id"))
         inserted_appt_type = await test_db.insert_appt_type(service_id, appt_type_name, appt_duration_minutes)
 
+        assert int(inserted_appt_type.get("appt_type_id")) is not None
+        assert int(inserted_appt_type.get("service_id")) == service_id
         assert inserted_appt_type.get("appt_type_name") == appt_type_name
         assert inserted_appt_type.get("appt_duration_minutes") == appt_duration_minutes
+        assert inserted_appt_type.get("created_at") is not None
+        assert inserted_appt_type.get("updated_at") is not None
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes", 
+        [
+            ("bruh@email.com", "password123", "Kunal Biz", "47 Brick Lnz", "NYC", "NY", "11368", "17187777777", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 0, "00:00:00", "23:59:59", "30 Min", 30),
+        ])
+    async def test_insert_appt_type_constraints_fkey(self, test_db, email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes):
+        inserted_user = await test_db.insert_user(email, password)
+        host_id = int(inserted_user.get("user_id"))
+
+        inserted_service = await test_db.insert_service(host_id, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su)
+        service_id = int(inserted_service.get("service_id"))
+
+        with pytest.raises(psycopg.errors.ForeignKeyViolation):
+            inserted_appt_type = await test_db.insert_appt_type(service_id + 999999999, appt_type_name, appt_duration_minutes)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes", 
+        [
+            ("bruh@email.com", "password123", "Kunal Biz", "47 Brick Lnz", "NYC", "NY", "11368", "17187777777", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 0, "00:00:00", "23:59:59", "0 Min", 0),
+        ])
+    async def test_insert_appt_type_constraints_check(self, test_db, email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes):
+        inserted_user = await test_db.insert_user(email, password)
+        host_id = int(inserted_user.get("user_id"))
+
+        inserted_service = await test_db.insert_service(host_id, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su)
+        service_id = int(inserted_service.get("service_id"))
+
+        with pytest.raises(psycopg.errors.CheckViolation):
+            inserted_appt_type = await test_db.insert_appt_type(service_id, appt_type_name, appt_duration_minutes)
+
+    @pytest.mark.asyncio
+    async def test_insert_appt_type_constraints_unique(self, test_db):
+
+        email1 = "bruh@email.com"
+        password1 = "password123"
+        email2 = "bruh2@email.com"
+        password2 = "password1234"
+        test_data1 = ["Kunal Biz", "47 Brick Lnz", "NYC", "NY", "11368", "17187777777", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59"]
+        test_data2 = ["Kunal Biz2", "48 Brick Lnz", "NYC", "NY", "11368", "17187777778", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59"]
+        test_data1_appt_type1 = ["30 Min", 30]
+        test_data1_appt_type2 = ["30 Min", 30]
+        test_data2_appt_type1 = ["30 Min", 30]
+        
+        inserted_user1 = await test_db.insert_user(email1, password1)
+        host_id1 = int(inserted_user1.get("user_id"))
+
+        inserted_user2 = await test_db.insert_user(email2, password2)
+        host_id2 = int(inserted_user2.get("user_id"))
+
+        inserted_service1 = await test_db.insert_service(host_id1, *test_data1)
+        service_id1 = int(inserted_service1.get("service_id"))
+
+        inserted_service2 = await test_db.insert_service(host_id2, *test_data2)
+        service_id2 = int(inserted_service2.get("service_id"))
+
+        inserted_appt_type1 = await test_db.insert_appt_type(service_id1, *test_data1_appt_type1)
+        inserted_appt_type2 = await test_db.insert_appt_type(service_id2, *test_data2_appt_type1)
+
+        with pytest.raises(psycopg.errors.UniqueViolation):
+            inserted_appt_type_err = await test_db.insert_appt_type(service_id1, *test_data2_appt_type1)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
