@@ -322,19 +322,55 @@ class TestAppt:
     async def test_insert_appt(self, test_db, email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes, appt_starts_at):
         
         inserted_user = await test_db.insert_user(email, password)
+        inserted_user2 = await test_db.insert_user(f"ay{email}", password)
         host_id = int(inserted_user.get("user_id"))
+        booker_id = int(inserted_user2.get("user_id"))
 
         inserted_service = await test_db.insert_service(host_id, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su)
         service_id = int(inserted_service.get("service_id"))
         inserted_appt_type = await test_db.insert_appt_type(service_id, appt_type_name, appt_duration_minutes)
 
         appt_ends_at = str(get_formatted_datetime(appt_starts_at) + datetime.timedelta(minutes = int(appt_duration_minutes)))
-        inserted_appt = await test_db.insert_appt(host_id, service_id, appt_type_name, appt_starts_at, appt_ends_at)
+        inserted_appt = await test_db.insert_appt(booker_id, service_id, appt_type_name, appt_starts_at, appt_ends_at)
                                                                                 
         assert int(inserted_appt.get("appt_id")) is not None
+        assert int(inserted_appt.get("user_id")) == booker_id
+        assert int(inserted_appt.get("service_id")) == service_id
+        assert inserted_appt.get("appt_type_name") == appt_type_name
         assert inserted_appt.get("appt_starts_at") == appt_starts_at
         assert inserted_appt.get("appt_ends_at") == appt_ends_at
+        assert inserted_appt_type.get("created_at") is not None
+        assert inserted_appt_type.get("updated_at") is not None
 
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes, appt_starts_at", 
+        [
+            ("bruh@email.com", "password123", "Kunal Biz", "47 Brick Lnz", "NYC", "NY", "11368", "17187777777", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 1, "00:00:00", "23:59:59", 0, "00:00:00", "23:59:59", "30 Min", 30, "2024-11-25 01:00:00"),
+        ])
+    async def test_insert_appt_constraints_fkey(self, test_db, email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes, appt_starts_at):
+        
+        inserted_user = await test_db.insert_user(email, password)
+        inserted_user2 = await test_db.insert_user(f"ay{email}", password)
+        host_id = int(inserted_user.get("user_id"))
+        booker_id = int(inserted_user2.get("user_id"))
+
+        inserted_service = await test_db.insert_service(host_id, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su)
+        service_id = int(inserted_service.get("service_id"))
+        inserted_appt_type = await test_db.insert_appt_type(service_id, appt_type_name, appt_duration_minutes)
+
+        appt_ends_at = str(get_formatted_datetime(appt_starts_at) + datetime.timedelta(minutes = int(appt_duration_minutes)))
+        
+        with pytest.raises(psycopg.errors.ForeignKeyViolation):
+            await test_db.insert_appt(booker_id + 999999999, service_id, appt_type_name, appt_starts_at, appt_ends_at)
+        
+        with pytest.raises(psycopg.errors.ForeignKeyViolation):
+            await test_db.insert_appt(booker_id, service_id + 999999999, appt_type_name, appt_starts_at, appt_ends_at)
+
+        with pytest.raises(psycopg.errors.ForeignKeyViolation):
+            await test_db.insert_appt(booker_id, service_id, f"{appt_type_name}_fake", appt_starts_at, appt_ends_at)
+
+    
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes, appt_starts_at", 
