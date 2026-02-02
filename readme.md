@@ -38,6 +38,7 @@ See the swagger documentation for details on routes
 
 ## Potential tech enhancements
 - Targeted error handling (e.g. to capture specific types of DB errors)
+- Further unit and integration testing
 - Employ Docker for portability
 - Incorporate NGINX for security and load balancing
 - Formalize logging
