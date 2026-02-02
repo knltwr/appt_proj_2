@@ -23,7 +23,6 @@ class Database:
                                         min_size = 5,
                                         max_size = 10,
                                         open = False # set as False b/c to be opened in db_open()
-                                        # recycle = 300, # connection reaping
                                         )
             self.dbname = dbname
         except psycopg.OperationalError as e:            
@@ -69,7 +68,7 @@ class Database:
         
     async def get_user_by_email(self,
                           email: str
-                          ) -> dict: # add in annotation for user model as return type? causes issue though if None returned from query
+                          ) -> dict:
         try:
             async with self.pool.connection() as conn:
                 conn.row_factory = dict_row
@@ -88,7 +87,7 @@ class Database:
 
     async def get_user_by_user_id(self,
                           user_id: int
-                          ) -> dict: # add in annotation for user model as return type? causes issue though if None returned from query
+                          ) -> dict:
         try:
             async with self.pool.connection() as conn:
                 conn.row_factory = dict_row
@@ -213,15 +212,6 @@ class Database:
                     appt_duration_minutes: int
                     ):
         try:
-            # for some reason, could not use self.conn here b/c it would be closed when creating cursor, so created a new connection for just this function
-            # with psycopg.connect(dbname = self.dbname, 
-            #                        user = CONFIG.DATABASE_USERNAME, 
-            #                        password = CONFIG.DATABASE_PASSWORD, 
-            #                        host = CONFIG.DATABASE_HOSTNAME, 
-            #                        port = CONFIG.DATABASE_PORT, 
-            #                        row_factory = dict_row
-            #                        ) as conn:
-            #     cursor = conn.cursor()
             async with self.pool.connection() as conn:
                 conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
@@ -241,15 +231,6 @@ class Database:
                                                        service_id: int,
                                                        appt_type_name: str):
         try:
-            # for some reason, could not use self.conn here b/c it would be closed when creating cursor, so created a new connection for just this function
-            # with psycopg.connect(dbname = self.dbname, 
-            #                        user = CONFIG.DATABASE_USERNAME, 
-            #                        password = CONFIG.DATABASE_PASSWORD, 
-            #                        host = CONFIG.DATABASE_HOSTNAME, 
-            #                        port = CONFIG.DATABASE_PORT, 
-            #                        row_factory = dict_row
-            #                        ) as conn:
-            #     cursor = conn.cursor()
             async with self.pool.connection() as conn:
                 conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
@@ -280,15 +261,6 @@ class Database:
         :rtype: dict | None
         """
         try:
-            # for some reason, could not use self.conn here b/c it would be closed when creating cursor, so created a new connection for just this function
-            # with psycopg.connect(dbname = self.dbname, 
-            #                        user = CONFIG.DATABASE_USERNAME, 
-            #                        password = CONFIG.DATABASE_PASSWORD, 
-            #                        host = CONFIG.DATABASE_HOSTNAME, 
-            #                        port = CONFIG.DATABASE_PORT, 
-            #                        row_factory = dict_row
-            #                        ) as conn:
-            #     cursor = conn.cursor()
             async with self.pool.connection() as conn:
                 conn.row_factory = dict_row
                 async with conn.cursor() as cursor:
@@ -323,15 +295,6 @@ class Database:
                     appt_ends_at: str
                     ):
         try:
-            # for some reason, could not use self.conn here b/c it would be closed when creating cursor, so created a new connection for just this function
-            # with psycopg.connect(dbname = self.dbname, 
-            #                        user = CONFIG.DATABASE_USERNAME, 
-            #                        password = CONFIG.DATABASE_PASSWORD, 
-            #                        host = CONFIG.DATABASE_HOSTNAME, 
-            #                        port = CONFIG.DATABASE_PORT, 
-            #                        row_factory = dict_row
-            #                        ) as conn:
-            #     cursor = conn.cursor()
             async with self.pool.connection() as conn:
                 conn.row_factory = dict_row
                 async with conn.cursor() as cursor:

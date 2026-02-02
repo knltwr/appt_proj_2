@@ -23,7 +23,7 @@ def create_access_token(data: dict) -> schemas_oauth2.Token:
 
 def verify_access_token(token: str, credentials_exception):
     try:
-        payload = jwt.decode(token, SECRET_KEY, [ALGORITHM]) # function excepts a sequence of ALGORITHMs
+        payload = jwt.decode(token, SECRET_KEY, [ALGORITHM]) # function accepts a sequence of ALGORITHMs
         user_id = int(payload.get("user_id"))
         if user_id is None:
             raise credentials_exception

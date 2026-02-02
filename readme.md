@@ -11,6 +11,7 @@ A RESTful API for service providers to allow patrons to book appointments.
 - Framework: FastAPI (w/ async)
 - Database: PostgreSQL (raw SQL, i.e. no ORM) using async connection pool
 - Authentication: JWT
+- Testing: pytest (unit and integration)
 - Others: pydantic (data validation)
 
 ## Installation

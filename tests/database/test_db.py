@@ -8,7 +8,7 @@ from app.utils.util_funcs import get_formatted_datetime
 # parametrize treats each set of inputs w/ the function as its own test, so reset_db will run between each input set
 # can add tests for ensuring email unique, and that created_at and updated_at are in fact timestamps
 # @pytest.mark.usefixtures("reset_db_class_level")
-class TestUsers:
+class TestDBUsers:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "email, password", 
@@ -92,7 +92,7 @@ class TestUsers:
         assert user.get("email") == email
         assert user2 is None
 
-class TestServices:
+class TestDBServices:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su", 
@@ -206,7 +206,7 @@ class TestServices:
         assert service.get("phone_number") == phone_number
         assert service2 is None
 
-class TestApptType:
+class TestDBApptType:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes", 
@@ -312,7 +312,7 @@ class TestApptType:
         assert appt_type.get("appt_type_name") == appt_type_name
         assert appt_type.get("appt_duration_minutes") == appt_duration_minutes
 
-class TestAppt:
+class TestDBAppt:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "email, password, service_name, street_address, city, state, zip_code, phone_number, is_open_mo, open_time_mo, close_time_mo, is_open_tu, open_time_tu, close_time_tu, is_open_we, open_time_we, close_time_we, is_open_th, open_time_th, close_time_th, is_open_fr, open_time_fr, close_time_fr, is_open_sa, open_time_sa, close_time_sa, is_open_su, open_time_su, close_time_su, appt_type_name, appt_duration_minutes, appt_starts_at", 
